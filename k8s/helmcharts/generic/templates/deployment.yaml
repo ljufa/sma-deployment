@@ -1,0 +1,63 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ template "generic.fullname" . }}
+  labels:
+    app: {{ template "generic.fullname" . }}
+    chart: {{ template "generic.chart" . }}
+    release: {{ .Release.Name }}
+    heritage: {{ .Release.Service }}
+spec:
+  replicas: {{ .Values.replicaCount }}
+  selector:
+    matchLabels:
+      app: {{ template "generic.name" . }}
+      release: {{ .Release.Name }}
+  template:
+    metadata:
+      labels:
+        app: {{ template "generic.name" . }}
+        release: {{ .Release.Name }}
+      annotations:
+        checksum/configmap: {{ toYaml .Values.configmap | sha256sum }}
+    spec:
+      {{- with .Values.volumes }}
+      volumes:
+{{ toYaml . | indent 6 }}
+      {{ end }}
+      containers:
+        - name: {{ template "generic.fullname" . }}
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          envFrom:
+            - configMapRef:
+                name: {{ template "generic.fullname" . }}
+          {{- with .Values.env }}
+          env:
+{{ toYaml . | indent 12 }}
+          {{ end }}
+  {{- with .Values.ports }}
+          ports:
+{{ toYaml . | indent 12 }}
+  {{ end }}
+  {{- with .Values.volumeMounts }}
+          volumeMounts:
+{{ toYaml . | indent 12 }}
+  {{ end }}
+          resources:
+{{ toYaml .Values.resources | indent 12 }}
+      imagePullSecrets:
+      - name: regcred
+
+    {{- with .Values.nodeSelector }}
+      nodeSelector:
+{{ toYaml . | indent 8 }}
+    {{- end }}
+    {{- with .Values.affinity }}
+      affinity:
+{{ toYaml . | indent 8 }}
+    {{- end }}
+    {{- with .Values.tolerations }}
+      tolerations:
+{{ toYaml . | indent 8 }}
+    {{- end }}

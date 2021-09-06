@@ -1,0 +1,25 @@
+{{- if .Values.ingressroute.enabled -}}
+apiVersion: traefik.containo.us/v1alpha1
+kind: IngressRoute
+metadata:
+  name: {{ template "generic.fullname" . }}
+  labels:
+    app: {{ template "generic.fullname" . }}
+    chart: {{ template "generic.chart" . }}
+    release: "{{ $.Release.Name }}"
+    heritage: "{{ $.Release.Service }}"
+spec:
+  entryPoints:
+  - websecure
+  routes:
+  - kind: Rule
+    match: {{ .Values.ingressroute.match }}
+    services:
+    - name: {{ template "generic.fullname" . }}
+      {{- range .Values.service.ports }}
+      port: {{ .port }}
+      {{- end }}
+      scheme: {{ .Values.ingressroute.scheme }}
+  tls:
+    certResolver: mydnschallenge
+{{- end }}

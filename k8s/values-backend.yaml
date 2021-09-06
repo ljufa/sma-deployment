@@ -1,0 +1,42 @@
+replicaCount: 1
+
+image:
+  pullPolicy: Always
+
+service:
+  enabled: true
+  type: ClusterIP
+  ports:
+    - port: 80
+      targetPort: 1977
+      protocol: TCP
+      name: grpc
+
+container:
+  ports:
+    - name: grpc
+      containerPort: 1977
+      protocol: TCP
+
+env:
+  - name: KAFKA__GROUP_ID
+    valueFrom:
+      fieldRef:
+        fieldPath: metadata.name
+
+ingressroute:
+  enabled: true
+  match: Host(`dlj-api.freemyip.com`)
+  scheme: h2c
+
+persistence:
+  enabled: true
+  size: 2Gi
+
+resources: {}
+
+nodeSelector:
+  type: ssd
+
+tolerations: []
+affinity: {}

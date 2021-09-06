@@ -1,0 +1,81 @@
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: {{ template "generic.fullname" . }}
+  labels:
+    app: {{ template "generic.fullname" . }}
+    chart: {{ template "generic.chart" . }}
+    release: {{ .Release.Name }}
+    heritage: {{ .Release.Service }}
+spec:
+  serviceName: {{ template "generic.fullname" . }}
+  replicas: {{ .Values.replicaCount }}
+  selector:
+    matchLabels:
+      app: {{ template "generic.name" . }}
+      release: {{ .Release.Name }}
+  template:
+    metadata:
+      labels:
+        app: {{ template "generic.name" . }}
+        release: {{ .Release.Name }}
+      annotations:
+        checksum/configmap: {{ toYaml .Values.configmap | sha256sum }}
+    spec:
+      containers:
+        - name: {{ template "generic.fullname" . }}
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          envFrom:
+            - configMapRef:
+                name: {{ template "generic.fullname" . }}
+  {{- with .Values.env }}
+          env:
+{{ toYaml . | indent 12 }}
+  {{ end }}
+
+  {{- with .Values.container.ports }}
+          ports:
+{{ toYaml . | indent 12 }}
+  {{ end }}
+  {{- if .Values.persistence.enabled }}
+          volumeMounts:
+#            - name: datadir
+#              mountPath: /data
+            - name: ssd
+              mountPath: /ssd
+  {{ end }}
+          resources:
+{{ toYaml .Values.resources | indent 12 }}
+      imagePullSecrets:
+      - name: regcred
+  {{- with .Values.nodeSelector }}
+      nodeSelector:
+{{ toYaml . | indent 8 }}
+{{- end }}
+{{- with .Values.affinity }}
+      affinity:
+{{ toYaml . | indent 8 }}
+{{- end }}
+{{- with .Values.tolerations }}
+      tolerations:
+{{ toYaml . | indent 8 }}
+{{- end }}
+
+  {{- if .Values.persistence.enabled }}
+      volumes:
+      - name: ssd
+        hostPath:
+          path: /ssd
+#  volumeClaimTemplates:
+#  - metadata:
+#      name: datadir
+#    spec:
+#      accessModes: [ "ReadWriteOnce" ]
+#      resources:
+#        requests:
+#          storage: "{{ .Values.persistence.size }}"
+#      storageClassName: "{{ .Values.persistence.storageClass }}"
+  {{- end }}
+
+

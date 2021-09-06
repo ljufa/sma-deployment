@@ -1,0 +1,31 @@
+configmap:
+
+replicaCount: 1
+
+image:
+  pullPolicy: Always
+
+service:
+  enabled: true
+  type: ClusterIP
+  ports:
+    - port: 80
+      targetPort: 8080
+      protocol: TCP
+      name: http
+
+container:
+  ports:
+    - name: http
+      containerPort: 8080
+      protocol: TCP
+
+
+ingressroute:
+  enabled: true
+  match: Host(`dlj-top-tweets.freemyip.com`)
+
+resources: {}
+nodeSelector: {}
+tolerations: []
+affinity: {}

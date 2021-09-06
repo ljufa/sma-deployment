@@ -1,0 +1,22 @@
+replicaCount: 1
+
+image:
+  pullPolicy: Always
+
+service:
+  enable: false
+  type: ClusterIP
+  ports: []
+
+container:
+  ports: []
+
+ingressroute:
+  enabled: false
+
+volumes: {}
+volumeMounts: {}
+resources: {}
+nodeSelector: {}
+tolerations: []
+affinity: {}
