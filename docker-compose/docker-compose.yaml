@@ -1,5 +1,6 @@
 version: "3"
 services:
+
   zookeeper:
     image: bitnami/zookeeper:3.6.2
     container_name: zookeeper
@@ -27,6 +28,7 @@ services:
     restart: unless-stopped
     volumes:
       - ./data/kfk:/bitnami/kafka
+
   top-tweets-stream-collector:
     image: ljufa/top-tweets-stream-collector:latest
     container_name: top-tweets-stream-collector
@@ -36,4 +38,20 @@ services:
       - kafka
     restart: unless-stopped
 
+  top-tweets-stream-backend:
+    image: ljufa/top-tweets-backend:latest
+    container_name: top-tweets-backend
+    ports:
+      - '1977:1977'
+    depends_on:
+      - kafka
+    restart: unless-stopped
 
+  top-tweets-stream-web:
+    image: ljufa/top-tweets-web:latest
+    container_name: top-tweets-web
+    ports:
+      - '8080:8080'
+    depends_on:
+      - top-tweets-stream-backend
+    restart: unless-stopped
