@@ -9,8 +9,12 @@ build_docker_local:
 	../../top-tweets-web/gradlew -p ../../top-tweets-web clean build
 	docker build ../../top-tweets-web -t ljufa/top-tweets-web:$(TAG)
 
-redeploy: TAG:=$(shell uuidgen)
-redeploy: build_docker_local
+redeploy_local: TAG:=$(shell uuidgen)
+redeploy_local: build_docker_local
+	TAG=$(TAG) docker-compose up -d
+
+redeploy_from_docker_hub:
+	docker-compose pull
 	TAG=$(TAG) docker-compose up -d
 
 log_backend:
