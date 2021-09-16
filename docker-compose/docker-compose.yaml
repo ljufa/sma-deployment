@@ -30,7 +30,7 @@ services:
       - ./data/kfk:/bitnami/kafka
 
   top-tweets-stream-collector:
-    image: ljufa/top-tweets-stream-collector:latest
+    image: ljufa/top-tweets-stream-collector:${TAG}
     container_name: top-tweets-stream-collector
     env_file:
       - .env
@@ -39,7 +39,7 @@ services:
     restart: unless-stopped
 
   top-tweets-backend:
-    image: ljufa/top-tweets-backend:latest
+    image: ljufa/top-tweets-backend:${TAG}
     container_name: top-tweets-backend
     ports:
       - '1977:1977'
@@ -48,7 +48,7 @@ services:
     restart: unless-stopped
 
   top-tweets-web:
-    image: ljufa/top-tweets-web:latest
+    image: ljufa/top-tweets-web:${TAG}
     container_name: top-tweets-web
     ports:
       - '8080:8080'

@@ -9,7 +9,10 @@ chmod a+rwx -r ./data
 TWITTER__AUTH_TOKEN=<paste your token here>
 ```
 
-- run containers
-`docker-compose up -d`
+- run containers using docker hub repository
+`TAG=latest docker-compose up -d`
+  
+- build and run local containers
+`make redeploy`
 
 - open `http://localhost:8080` in the browser
