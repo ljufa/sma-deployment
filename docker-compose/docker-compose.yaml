@@ -38,7 +38,7 @@ services:
       - kafka
     restart: unless-stopped
 
-  top-tweets-stream-backend:
+  top-tweets-backend:
     image: ljufa/top-tweets-backend:latest
     container_name: top-tweets-backend
     ports:
@@ -47,11 +47,11 @@ services:
       - kafka
     restart: unless-stopped
 
-  top-tweets-stream-web:
+  top-tweets-web:
     image: ljufa/top-tweets-web:latest
     container_name: top-tweets-web
     ports:
       - '8080:8080'
     depends_on:
-      - top-tweets-stream-backend
+      - top-tweets-backend
     restart: unless-stopped
