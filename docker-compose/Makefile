@@ -1,21 +1,36 @@
-TAG ?= latest
+DEFAULT_TAG ?= latest
+
 build_docker_local:
-	../../top-tweets-backend/gradlew -p ../../top-tweets-backend clean build
-	docker build ../../top-tweets-backend -t ljufa/top-tweets-backend:$(TAG)
+	../../sma-tw-data/gradlew -p ../../sma-tw-data build
+	docker build ../../sma-tw-data -t ljufa/sma-tw-data:$(DEFAULT_TAG)
 
-	../../top-tweets-stream-collector/gradlew -p ../../top-tweets-stream-collector clean build
-	docker build ../../top-tweets-stream-collector -t ljufa/top-tweets-stream-collector:$(TAG)
+	../../sma-tw-stream-collector/gradlew -p ../../sma-tw-stream-collector build
+	docker build ../../sma-tw-stream-collector -t ljufa/sma-tw-stream-collector:$(DEFAULT_TAG)
 
-	../../top-tweets-web/gradlew -p ../../top-tweets-web clean build
-	docker build ../../top-tweets-web -t ljufa/top-tweets-web:$(TAG)
+	../../sma-control/gradlew -p ../../sma-control build
+	docker build ../../sma-control -t ljufa/sma-control:$(DEFAULT_TAG)
 
-redeploy_local: TAG:=$(shell uuidgen)
+	cd ../../sma-web-ui/ &&	cargo make build_release &&	docker build . -t ljufa/sma-web-ui:$(DEFAULT_TAG)
+
+redeploy_local: DEFAULT_TAG:=$(shell uuidgen)
+
 redeploy_local: build_docker_local
-	TAG=$(TAG) docker-compose up -d
+	TAG=$(DEFAULT_TAG) docker-compose up -d
+
+redeploy_latest:
+	TAG=latest docker-compose up -d
 
 redeploy_from_docker_hub:
 	docker-compose pull
-	TAG=$(TAG) docker-compose up -d
+	TAG=$(DEFAULT_TAG) docker-compose up -d
 
-log_backend:
-	docker-compose logs -f --tail 200 top-tweets-backend
+log:
+	docker-compose logs -f --tail 200
+
+SVC =
+SVC_TAG =
+redeploy_svc: SVC_TAG:=$(shell uuidgen)
+redeploy_svc:
+	../../$(SVC)/gradlew -p ../../$(SVC) build
+	docker build ../../$(SVC) -t ljufa/$(SVC):$(SVC_TAG)
+	TAG=$(SVC_TAG) docker-compose up -d $(SVC)
