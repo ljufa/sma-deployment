@@ -8,7 +8,7 @@ services:
       - ALLOW_ANONYMOUS_LOGIN=yes
     restart: unless-stopped
     volumes:
-      - ./data/zk:/bitnami/zookeeper
+      - zk_data:/bitnami/zookeeper
 
   kafka:
     image: bitnami/kafka:2.8.0
@@ -27,7 +27,7 @@ services:
       - zookeeper
     restart: unless-stopped
     volumes:
-      - ./data/kfk:/bitnami/kafka
+      - kafka_data:/bitnami/kafka
 
   postgres:
     image: postgres:latest
@@ -38,20 +38,9 @@ services:
       - POSTGRES_USER=toptweets
       - PGDATA=/var/lib/postgresql/data/pgdata
     volumes:
-      - ./data/pg:/var/lib/postgresql/data
-    ports:
-      - '5432:5432'
-
-  traefik:
-    container_name: traefik
-    image: traefik:latest
-    ports:
-      - '80:80'
-      - '443:443'
-    volumes:
-      - /var/run/docker.sock:/var/run/docker.sock:ro
-      - ./traefik_config.yaml:/traefik.yaml:ro
-    restart: unless-stopped
+      - sma_pg_data:/var/lib/postgresql/data
+#    ports:
+#      - '5432:5432'
 
   sma-tw-stream-collector:
     image: ljufa/sma-tw-stream-collector:${TAG}
@@ -72,35 +61,49 @@ services:
     restart: unless-stopped
     labels:
       - "traefik.enable=true"
-      - "traefik.http.routers.sma-tw-data.rule=PathPrefix(`/sma-tw-data`)"
-      - "traefik.http.routers.sma-tw-data.entrypoints=web"
-#      - "traefik.http.routers.sma-tw-data.tls.certresolver=mydnschallenge"
+      - "traefik.http.routers.sma-tw-data.rule=Host(`sma.dlj.freemyip.com`) && PathPrefix(`/sma-tw-data`)"
+      - "traefik.http.routers.sma-tw-data.entrypoints=websecure"
+      - "traefik.http.routers.sma-tw-data.tls.certresolver=mydnschallenge"
       - "traefik.http.services.sma-tw-data.loadbalancer.server.port=1977"
 
 
   sma-control:
     image: ljufa/sma-control:${TAG}
     container_name: sma-control
-#    ports:
+    depends_on:
+      - postgres
+    #    ports:
 #      - '8080:8080'
     restart: unless-stopped
     labels:
-      - "traefik.http.routers.sma-control.rule=PathPrefix(`/sma-control`)"
+      - "traefik.http.routers.sma-control.rule=Host(`sma.dlj.freemyip.com`) && PathPrefix(`/sma-control`)"
       - "traefik.enable=true"
-      - "traefik.http.routers.sma-control.entrypoints=web"
-#      - "traefik.http.routers.sma-control.tls.certresolver=mydnschallenge"
+      - "traefik.http.routers.sma-control.entrypoints=websecure"
+      - "traefik.http.routers.sma-control.tls.certresolver=mydnschallenge"
       - "traefik.http.services.sma-control.loadbalancer.server.port=8080"
 
   sma-web-ui:
     image: ljufa/sma-web-ui:${TAG}
     container_name: sma-web-ui
-    ports:
-      - '8000:80'
+#    ports:
+#      - '8000:80'
     restart: unless-stopped
     labels:
       - "traefik.enable=true"
-      - "traefik.http.routers.sma-web-ui.rule=PathPrefix(`/`)"
-      - "traefik.http.routers.sma-web-ui.entrypoints=web"
-#      - "traefik.http.routers.sma-web-ui.tls.certresolver=mydnschallenge"
+      - "traefik.http.routers.sma-web-ui.rule=Host(`sma.dlj.freemyip.com`) && PathPrefix(`/`)"
+      - "traefik.http.routers.sma-web-ui.entrypoints=websecure"
+      - "traefik.http.routers.sma-web-ui.tls.certresolver=mydnschallenge"
       - "traefik.http.services.sma-web-ui.loadbalancer.server.port=80"
 
+volumes:
+  kafka_data:
+    driver: local
+  zk_data:
+    driver: local
+  sma_pg_data:
+    driver: local
+
+networks:
+  default:
+    external:
+      name: proxy
